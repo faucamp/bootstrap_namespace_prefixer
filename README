@@ -1,3 +1,6 @@
 Bootstrap Namespace Prefixer
 
 A small Python script that adds a unique prefix to all the CSS class names in Bootstrap, in order to avoid common CSS name clashes.
+
+More info and documentation at: http://longtermcache.blogspot.com/2012/08/adding-prefix-to-bootstrap-css-classes.html
+
