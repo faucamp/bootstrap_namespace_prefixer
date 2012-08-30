@@ -13,6 +13,8 @@ CSS_CLASS_PREFIX = 'tb-'
 CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n]*[\{,])')
 JS_CSS_CLASS_REGEX_TEMPLATE = r"""(?<!(.\.on|\.off))(\(['"][^'"]*\.)(%s)([^'"]*['"]\))"""
 JS_JQUERY_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)\(['"])(%s)(['"]\))"""
+JS_JQUERY_REGEX_TEMPLATE_VAR = r"""((addClass|removeClass|hasClass|toggleClass)\()([a-zA-Z0-9]+)(\))"""
+JS_JQUERY_REGEX_TEMPLATE_LIST = r"""((addClass|removeClass|hasClass|toggleClass)\(\[)([^\]]*)(\])"""
 # Regex for the conditional/more tricky add/remove/hasClass calls in the bootstrap.js source
 JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)'\]\(['"])(%s)(['"]\))"""
 # Regex for certain jquery selectors that might have been missed by the previous regexes
@@ -74,6 +76,25 @@ def processJs(jsFilename, cssClassNames):
         # JQuery has/add/removeClass calls
         jqueryCssClassRegex = re.compile(JS_JQUERY_REGEX_TEMPLATE % regexClassNamesAlternatives)
         js = jqueryCssClassRegex.sub(r'\1%s\3\4' % CSS_CLASS_PREFIX, js)
+        jqueryCssClassRegex = re.compile(JS_JQUERY_REGEX_TEMPLATE_VAR)
+        js = jqueryCssClassRegex.sub(r"\1'%s'+\3\4" % CSS_CLASS_PREFIX, js)
+        # List/array of variables or string literals
+        jqueryCssClassRegex = re.compile(JS_JQUERY_REGEX_TEMPLATE_LIST)
+        match = jqueryCssClassRegex.search(js)
+        while match:
+            listStr = match.group(3)
+            items = listStr.split(',')
+            processed = []
+            for rawItem in items:
+                item = rawItem.strip()
+                if item[0] in ("'", '"'): # string literal
+                    item = item[0] + CSS_CLASS_PREFIX + item[1:]
+                else: # variable
+                    item = "'%s'+%s" % (CSS_CLASS_PREFIX, item)
+                processed.append(item)
+            newList = ','.join(processed)
+            js = js[0:match.start(3)] + newList + js[match.end(3):]
+            match = jqueryCssClassRegex.search(js, match.start(3)+len(newList))                                    
         # In-line conditional JQuery has/add/removeClass calls
         jqueryCssClassRegex = re.compile(JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE % regexClassNamesAlternatives)
         js = jqueryCssClassRegex.sub(r'\1%s\3\4' % CSS_CLASS_PREFIX, js)
