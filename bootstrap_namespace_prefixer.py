@@ -18,10 +18,12 @@ JS_JQUERY_REGEX_TEMPLATE_VAR = r"""((addClass|removeClass|hasClass|toggleClass)\
 JS_JQUERY_REGEX_TEMPLATE_LIST = r"""((addClass|removeClass|hasClass|toggleClass)\(\[)([^\]]*)(\])"""
 JS_JQUERY_REGEX_STRING_MULTIPLE = re.compile(r"""((addClass|removeClass|hasClass|toggleClass)\(['"]\s*)(([^'"\s]+\s+)+[^'"]+)(\s*['"]\))""") # e.g: removeClass('fade in top bottom')
 # Regex for the conditional/more tricky add/remove/hasClass calls in the bootstrap.js source
-JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)'\]\(['"])(%s)(['"]\))"""
+JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)'\]\(['"])(%s)(['"])""" # e.g: ? 'addClass' : 'removeClass']('someclass')
 # Regex for certain jquery selectors that might have been missed by the previous regexes
 JS_JQUERY_SELECTOR_REGEX_TEMPLATE = r"""(:not\(\.)(%s)(\))"""
 JS_INLINE_HTML_REGEX_TEMPLATE = r"""(class="[^"]*)(?<=\s|")(%s)(?=\s|")"""
+# Some edge cases aren't easy to fix using generic regexes because of potential clashes with non-CSS code. Use manual, hard-coded replacements for these
+HARDCODED_REPLACEMENTS = ((r"""this.$element[method]('in')""", r"""this.$element[method]('%sin')""" % CSS_CLASS_PREFIX),)
 
 def processCss(cssFilename):
     """ Adds the CSS_CLASS_PREFIX to each CSS class in the specified CSS file """
@@ -119,6 +121,9 @@ def processJs(jsFilename, cssClassNames):
             modJs = jqueryCssClassRegex.sub(r'\1%s\2' % CSS_CLASS_PREFIX, js)
         js = modJs
         del modJs
+        # Finally, process some edge cases/exceptions which cannot be easily handled by more genereic regexes
+        for searchStr, replacementStr in HARDCODED_REPLACEMENTS:
+            js = js.replace(searchStr, replacementStr)
         # Write the output file
         processedFilename = jsFilename[:-3] + '.prefixed.js'    
         f = open(processedFilename, 'w')
