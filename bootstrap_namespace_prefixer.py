@@ -10,7 +10,8 @@ import sys, re
 CSS_CLASS_PREFIX = 'tb-'
 
 # Note: regex uses semi-Python-specific \n (newline) character
-CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}]*[\{,])')
+CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}\(]*[\{,])') # e.g: .classname {
+CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX = re.compile(r'(\[\s*class\s*[~|*^]?=\s*")([a-zA-Z][a-zA-Z0-9-_]+\w*)(")(?=[^\{,\n\}]*[\{,])') # e.g: [class~="someclass-"] 
 JS_CSS_CLASS_REGEX_TEMPLATE = r"""(?<!(.\.on|\.off))(\(['"][^'"]*\.)(%s)([^'"]*['"]\))"""
 JS_JQUERY_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)\(['"])(%s)(['"]\))"""
 JS_JQUERY_REGEX_TEMPLATE_VAR = r"""((addClass|removeClass|hasClass|toggleClass)\()([a-zA-Z0-9]+)(\))"""
@@ -32,8 +33,10 @@ def processCss(cssFilename):
         css = f.read()
         f.close()        
         processedFilename = cssFilename[:-4] + '.prefixed.css'
-        f = open(processedFilename, 'w')
-        f.write(CSS_CLASS_REGEX.sub(r'.%s\1' % CSS_CLASS_PREFIX, css))
+        f = open(processedFilename, 'w')        
+        processedCss = CSS_CLASS_REGEX.sub(r'.%s\1' % CSS_CLASS_PREFIX, css)
+        processedCss = CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX.sub(r'\1%s\2\3' % CSS_CLASS_PREFIX, processedCss)
+        f.write(processedCss)
         f.close();
         print ' Prefixed CSS file written as:', processedFilename
 
