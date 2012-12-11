@@ -9,6 +9,10 @@ import sys, re
 """ The CSS classname/namespace prefix to prepend to all Bootstrap CSS classes """
 CSS_CLASS_PREFIX = 'tb-'
 
+# Not all CSS classes that are referenced in JavaScript are actually defined in the CSS script.
+# This list allows the JavaScript prefix algorithm to recognize these "extra" classes
+ADDITIONAL_CSS_CLASSES_IN_JS = ['collapsed']
+
 # Note: regex uses semi-Python-specific \n (newline) character
 CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}\(]*[\{,])') # e.g: .classname {
 CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX = re.compile(r'(\[\s*class\s*[~|*^]?=\s*")([a-zA-Z][a-zA-Z0-9-_]+\w*)(")(?=[^\{,\n\}]*[\{,])') # e.g: [class~="someclass-"] 
@@ -145,6 +149,7 @@ if __name__ == '__main__':
                 cssClassNames = collectCssClassnames('%s/css/%s' % (bsTopDir, cssFile))
                 
         if cssClassNames != None:
+            cssClassNames.update(ADDITIONAL_CSS_CLASSES_IN_JS)
             for jsFile in ('bootstrap.js', 'bootstrap.min.js'):
                 processJs('%s/js/%s' % (bsTopDir, jsFile), cssClassNames)
         else:
