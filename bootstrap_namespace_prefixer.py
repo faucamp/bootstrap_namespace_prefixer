@@ -16,6 +16,7 @@ JS_CSS_CLASS_REGEX_TEMPLATE = r"""(?<!(.\.on|\.off))(\(['"][^'"]*\.)(%s)([^'"]*[
 JS_JQUERY_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)\(['"])(%s)(['"]\))"""
 JS_JQUERY_REGEX_TEMPLATE_VAR = r"""((addClass|removeClass|hasClass|toggleClass)\()([a-zA-Z0-9]+)(\))"""
 JS_JQUERY_REGEX_TEMPLATE_LIST = r"""((addClass|removeClass|hasClass|toggleClass)\(\[)([^\]]*)(\])"""
+JS_JQUERY_REGEX_STRING_MULTIPLE = re.compile(r"""((addClass|removeClass|hasClass|toggleClass)\(['"]\s*)(([^'"\s]+\s+)+[^'"]+)(\s*['"]\))""") # e.g: removeClass('fade in top bottom')
 # Regex for the conditional/more tricky add/remove/hasClass calls in the bootstrap.js source
 JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)'\]\(['"])(%s)(['"]\))"""
 # Regex for certain jquery selectors that might have been missed by the previous regexes
@@ -97,7 +98,13 @@ def processJs(jsFilename, cssClassNames):
                 processed.append(item)
             newList = ','.join(processed)
             js = js[0:match.start(3)] + newList + js[match.end(3):]
-            match = jqueryCssClassRegex.search(js, match.start(3)+len(newList))                                    
+            match = jqueryCssClassRegex.search(js, match.start(3)+len(newList))
+        # Modify multiple CSS classes that are referenced in a single string
+        match = JS_JQUERY_REGEX_STRING_MULTIPLE.search(js)
+        while match:
+            newList = ' '.join(['%s%s' % (CSS_CLASS_PREFIX, item) if item in cssClassNames else item for item in match.group(3).split(' ')])
+            js = js = js[0:match.start(3)] + newList + js[match.end(3):]
+            match = JS_JQUERY_REGEX_STRING_MULTIPLE.search(js, match.start(3)+len(newList))
         # In-line conditional JQuery has/add/removeClass calls
         jqueryCssClassRegex = re.compile(JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE % regexClassNamesAlternatives)
         js = jqueryCssClassRegex.sub(r'\1%s\3\4' % CSS_CLASS_PREFIX, js)
