@@ -15,7 +15,7 @@ ADDITIONAL_CSS_CLASSES_IN_JS = ['collapsed']
 
 # Note: regex uses semi-Python-specific \n (newline) character
 CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}\(]*[\{,])') # e.g: .classname {
-CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX = re.compile(r'(\[\s*class\s*[~|*^]?=\s*")([a-zA-Z][a-zA-Z0-9-_]+\w*)(")(?=[^\{,\n\}]*[\{,])') # e.g: [class~="someclass-"] 
+CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX = re.compile(r'(\[\s*class\s*[~|*^]?=\s*"\s*)([a-zA-Z][a-zA-Z0-9-_]+\w*)(")(?=[^\{,\n\}]*[\{,])') # e.g: [class~="someclass-"] 
 JS_CSS_CLASS_REGEX_TEMPLATE = r"""(?<!(.\.on|\.off))(\(['"][^'"]*\.)(%s)([^'"]*['"]\))"""
 JS_JQUERY_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)\(['"])(%s)(['"])"""
 JS_JQUERY_REGEX_TEMPLATE_VAR = r"""((addClass|removeClass|hasClass|toggleClass)\()([a-zA-Z0-9]+)(\))"""
@@ -26,8 +26,8 @@ JS_JQUERY_CONDITIONAL_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggl
 # Regex for certain jquery selectors that might have been missed by the previous regexes
 JS_JQUERY_SELECTOR_REGEX_TEMPLATE = r"""(:not\(\.)(%s)(\))"""
 JS_INLINE_HTML_REGEX_TEMPLATE = r"""(class="[^"]*)(?<=\s|")(%s)(?=\s|")"""
-# Some edge cases aren't easy to fix using generic regexes because of potential clashes with non-CSS code. Use manual, hard-coded replacements for these
-HARDCODED_REPLACEMENTS = ((r"""this.$element[method]('in')""", r"""this.$element[method]('%sin')""" % CSS_CLASS_PREFIX),)
+# Some edge cases aren't easy to fix using generic regexes because of potential clashes with non-CSS code
+JS_EDGE_CASE_1_TEMPLATE = r"""(this\.\$element\[\s*\w+\s*\]\(['"]\s*)(%s)(['"]\s*\))"""
 
 def processCss(cssFilename):
     """ Adds the CSS_CLASS_PREFIX to each CSS class in the specified CSS file """
@@ -125,9 +125,9 @@ def processJs(jsFilename, cssClassNames):
             modJs = jqueryCssClassRegex.sub(r'\1%s\2' % CSS_CLASS_PREFIX, js)
         js = modJs
         del modJs
-        # Finally, process some edge cases/exceptions which cannot be easily handled by more genereic regexes
-        for searchStr, replacementStr in HARDCODED_REPLACEMENTS:
-            js = js.replace(searchStr, replacementStr)
+        # Finally, process some edge cases/exceptions which cannot be easily handled by more generic regexes
+        jsEdgeCase1Regex = re.compile(JS_EDGE_CASE_1_TEMPLATE % regexClassNamesAlternatives)
+        js = jsEdgeCase1Regex.sub(r'\1%s\2\3' % CSS_CLASS_PREFIX, js)
         # Write the output file
         processedFilename = jsFilename[:-3] + '.prefixed.js'    
         f = open(processedFilename, 'w')
