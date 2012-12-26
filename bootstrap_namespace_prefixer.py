@@ -4,6 +4,7 @@
 @license GPLv2+
 """
 
+from __future__ import print_function
 import sys, re
 import os.path
 
@@ -32,11 +33,11 @@ JS_EDGE_CASE_1_TEMPLATE = r"""(this\.\$element\[\s*\w+\s*\]\(['"]\s*)(%s)(['"]\s
 
 def processCss(cssFilename):
     """ Adds the CSS_CLASS_PREFIX to each CSS class in the specified CSS file """
-    print 'Processing CSS file:', cssFilename
+    print('Processing CSS file:', cssFilename)
     try:
         f = open(cssFilename)        
     except IOError:
-        print ' Failed to open file; skipping:', cssFilename
+        print(' Failed to open file; skipping:', cssFilename)
     else:
         css = f.read()
         f.close()        
@@ -46,15 +47,15 @@ def processCss(cssFilename):
         processedCss = CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX.sub(r'\1%s\2\3' % CSS_CLASS_PREFIX, processedCss)
         f.write(processedCss)
         f.close();
-        print ' Prefixed CSS file written as:', processedFilename
+        print(' Prefixed CSS file written as:', processedFilename)
 
 def collectCssClassnames(cssFilename):
     """ Returns a set of all the CSS class names in the specified CSS file """
-    print 'Collecting CSS classnames from file:', cssFilename
+    print('Collecting CSS classnames from file:', cssFilename)
     try:
         f = open(cssFilename)        
     except IOError:
-        print ' Failed to open file; skipping:', cssFilename
+        print(' Failed to open file; skipping:', cssFilename)
     else:
         css = f.read()
         f.close()
@@ -67,11 +68,11 @@ def processJs(jsFilename, cssClassNames):
     """ Adds the CSS_CLASS_PREFIX to each CSS class in the specified JavaScript file.
     Requires a list of CSS classes (to avoid confusion between custom events and CSS classes, etc)
     """
-    print "Processing JavaScript file:", jsFilename
+    print("Processing JavaScript file:", jsFilename)
     try:
         f = open(jsFilename)        
     except IOError:
-        print ' Failed to open file; skipping:', jsFilename
+        print(' Failed to open file; skipping:', jsFilename)
     else:
         regexClassNamesAlternatives =  '|'.join(cssClassNames)
         js = f.read()
@@ -134,12 +135,12 @@ def processJs(jsFilename, cssClassNames):
         f = open(processedFilename, 'w')
         f.write(js)
         f.close();
-        print ' Prefixed JavaScript file written as:', processedFilename                                
+        print(' Prefixed JavaScript file written as:', processedFilename)
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print 'Usage: %s <bootstrap_top_dir>' % sys.argv[0]
+        print('Usage: %s <bootstrap_top_dir>' % sys.argv[0])
         sys.exit(1)
     else:
         bsTopDir = sys.argv[1]
@@ -156,4 +157,4 @@ if __name__ == '__main__':
                 jsFilePath = os.path.normpath(os.path.join(bsTopDir, 'js', jsFile))
                 processJs(jsFilePath, cssClassNames)
         else:
-            print 'Failed to collect CSS class names - cannot modify JavaScript source files as a result'
+            print('Failed to collect CSS class names - cannot modify JavaScript source files as a result')
