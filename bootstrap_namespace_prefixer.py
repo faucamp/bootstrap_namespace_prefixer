@@ -5,6 +5,7 @@
 """
 
 import sys, re
+import os.path
 
 """ The CSS classname/namespace prefix to prepend to all Bootstrap CSS classes """
 CSS_CLASS_PREFIX = 'tb-'
@@ -144,13 +145,15 @@ if __name__ == '__main__':
         bsTopDir = sys.argv[1]
         cssClassNames = None
         for cssFile in ('bootstrap.css', 'bootstrap.min.css', 'bootstrap-responsive.css', 'bootstrap-responsive.min.css'):
-            processCss('%s/css/%s' % (bsTopDir, cssFile))
+            cssFilePath = os.path.normpath(os.path.join(bsTopDir, 'css', cssFile))
+            processCss(cssFilePath)
             if cssClassNames == None:
-                cssClassNames = collectCssClassnames('%s/css/%s' % (bsTopDir, cssFile))
+                cssClassNames = collectCssClassnames(cssFilePath)
                 
         if cssClassNames != None:
             cssClassNames.update(ADDITIONAL_CSS_CLASSES_IN_JS)
             for jsFile in ('bootstrap.js', 'bootstrap.min.js'):
-                processJs('%s/js/%s' % (bsTopDir, jsFile), cssClassNames)
+                jsFilePath = os.path.normpath(os.path.join(bsTopDir, 'js', jsFile))
+                processJs(jsFilePath, cssClassNames)
         else:
             print 'Failed to collect CSS class names - cannot modify JavaScript source files as a result'
