@@ -16,7 +16,8 @@ CSS_CLASS_PREFIX = 'tb-'
 ADDITIONAL_CSS_CLASSES_IN_JS = ['collapsed']
 
 # Note: regex uses semi-Python-specific \n (newline) character
-CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}\(]*[\{,])') # e.g: .classname {
+#CSS_CLASS_REGEX = re.compile(r'\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n\}\(]*[\{,])') # e.g: .classname {
+CSS_CLASS_REGEX = re.compile(r'(?<!progid:DXImageTransform)(?<!progid:DXImageTransform.Microsoft)\.([a-zA-Z][a-zA-Z0-9-_]+\w*)(?=[^\{,\n]*[\{,])') # e.g: .classname {
 CSS_CLASS_ATTRIBUTE_SELECTOR_REGEX = re.compile(r'(\[\s*class\s*[~|*^]?=\s*"\s*)([a-zA-Z][a-zA-Z0-9-_]+\w*)(")(?=[^\{,\n\}]*[\{,])') # e.g: [class~="someclass-"] 
 JS_CSS_CLASS_REGEX_TEMPLATE = r"""(?<!(.\.on|\.off))(\(['"][^'"]*\.)(%s)([^'"]*['"]\))"""
 JS_JQUERY_REGEX_TEMPLATE = r"""((addClass|removeClass|hasClass|toggleClass)\(['"])(%s)(['"])"""
